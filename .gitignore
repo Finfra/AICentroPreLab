@@ -1,5 +1,7 @@
 # for File Format
 *.gz
+.gitfile
+*.swp
 
 # for macOS
 .DS_Store
