@@ -5,6 +5,7 @@
 
 # for File 
 data/creditcard.csv
+data/MNIST_Simple
 7-2.AnomalyDetection/model.h5
 7-2.AnomalyDetection/logs
 
