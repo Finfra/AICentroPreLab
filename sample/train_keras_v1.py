@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 
 
 """
-SACP AI 포탈과 연계를 위한 기본 객체 생성
+AI 포탈과 연계를 위한 기본 객체 생성
 """
 from aicentro.session import Session
 session = Session(verify=False)
@@ -21,8 +21,9 @@ session = Session(verify=False)
 """
 학습 모델 개발 시 프레임워크별 객체 사용
 """
-from aicentro.framework.keras import Keras as Frm
-framework = Frm(session=session)
+from aicentro.framework.keras import Keras as SacpFrm
+from aicentro.framework.framework import AutomlFramework
+framework = SacpFrm(session=session)
 
 
 """
@@ -74,12 +75,14 @@ y_label = data.target_names.tolist()
 
 y_test_c = np.argmax(y_test, axis=1).reshape(-1, 1)
 y_test_pred_c = np.argmax(y_test_pred, axis=1).reshape(-1, 1)
-
 """
 모델 학습 후 결과를 저장하고 해당 결과를 UI 상에 노출
 """
-framework.plot_confusion_matrix(y_test_c, y_test_pred_c, target_names=y_label, title='Confusion Matrix')
-framework.classification_report(y_test_c, y_test_pred_c, target_names=y_label)
+arc = AutomlFramework()
+arc.make_expert_acc_loss_chart(history.metrics)
+arc.make_multiLabel_roc_curve(y_test_pred, y_test, 'input_name', y_label)
+arc.make_confusion_matrix(y_test_pred, y_test, 'input_name', y_label)
+
 framework.plot_roc_curve(y_test, y_test_pred, len(y_label), y_label)
 
 

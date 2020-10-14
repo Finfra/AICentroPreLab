@@ -8,7 +8,7 @@ import numpy as np
 from aicentro.loader.keras_loader import KerasLoader
 
 loader = KerasLoader(
-    model_filename='iris-classification'  # 저장된 모델파일명 ( .h5 제외 )
+    model_filename='iris-classification-study'  # 저장된 모델파일명 ( .h5 제외 )
 )
 
 """

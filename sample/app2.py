@@ -1,25 +1,30 @@
+import numpy as np
+
 """
 학습된 모델을 서비스로 활용하기 위해 로더 사용
 """
 
 # Keras .h5 모델 로더
 from aicentro.loader.keras_loader import KerasLoader
+
 loader = KerasLoader(
-    model_filename='filename' # 저장된 모델파일명 ( .h5 제외 )
+    model_filename='iris-classification'  # 저장된 모델파일명 ( .h5 제외 )
 )
 
 """
 모델 온라인 서비스를 위한 BaseServing 클래스
 """
 from flask import jsonify, request
+from flask import current_app
 from aicentro.serving.base_serving import BaseServing
+
 
 class CustomServing(BaseServing):
     """
     BaseServing 클래스를 기반으로 전처리/후처리 영역을 구성
     """
 
-    def __init__(self, loader, inputs_key='inputs', outputs=None):
+    def __init__(self, loader, inputs_key='inputs', outputs=None, labels=[]):
         """
         Serving 클래스 초기화
         :param loader: 모델 로더
@@ -28,7 +33,7 @@ class CustomServing(BaseServing):
         :param outputs: 출력 텐서의 키 ( optional )
         """
         super().__init__(loader=loader, inputs_key=inputs_key, outputs=outputs)
-        ...
+        self.labels = labels
 
     def pre_processing(self):
         """
@@ -47,36 +52,20 @@ class CustomServing(BaseServing):
         :return: dict: Json 으로 생성될 Dictionary 객체
         """
         resp_dict = dict()
-        resp_dict['KEY'] = response
-        resp_dict['rsp_code'] = '00000'
-        resp_dict['rsp_message'] = 'ok'
+        resp_dict['classification'] = self.labels[np.argmax(response.reshape(-1))]
+
+        current_app.logger.info('response : ' + resp_dict['classification'])
+
         return resp_dict
 
-    def get(self):
-        """
-        선택사항이며 GET 방식으로 전송 시 제공할 내용을 작성
-        GET 방식은 pre_processing 과 post_processing 함수를 수행하지 않음
-        구현하지 않으면 BaseServing 의 get 함수 호출
-        :return: dict: Json 으로 생성될 Dictionary 객체
-        """
-        ...
-
-    def post(self):
-        """
-        선택사항이며 POST 방식으로 전송 시 처리할 내용을 작성
-        POST 방식은 pre_processing 과 post_processing 함수를 수행함
-        구현하지 않으면 BaseServing 의 post 함수 호출
-        :return: Any: 타입은 없으나 BaseServing 일 경우는 loader.predict 함수의 리턴타입으로 결정됨
-        """
-        ...
 
 # 서빙 클래스는 Flask 의 MethodView 방식을 활용하여 구성됨에 따라
 # 클래스 객체 생성과는 다른 as_view 라는 함수를 통해 객체 생성
 serving = CustomServing.as_view(
-    'serving', # view 이름
-    loader, inputs_key='inputs' # CustomServing 클래스의 __init__ 함수의 파라메터
+    'serving',  # view 이름
+    loader, inputs_key='inputs',  # CustomServing 클래스의 __init__ 함수의 파라메터
+    labels=['setosa', 'versicolor', 'virginica']
 )
-
 
 """
 모델로더와 서빙 클래스를 Flask 프레임워크에 적용 
@@ -88,10 +77,12 @@ from aicentro.serving.serving_config import configure_error_handlers
 app = Flask(__name__)
 # Flask 객체에 URL Rule 정의
 app.add_url_rule(
-    '/', # URL 패스 정의
-    view_func=serving, # 서빙 클래스 객체
-    methods=['GET', 'POST'] # 서비스 가능 HTTP 메소드
+    '{0}/',  # URL 패스 정의
+    view_func=serving,  # 서빙 클래스 객체
+    methods=['GET', 'POST']  # 서비스 가능 HTTP 메소드
 )
+
+
 # Error Handler 적용
 # 에러에 따른 결과 포멧 변경 시 별도 함수 호출
 def message_format(code, message):
@@ -107,10 +98,26 @@ def message_format(code, message):
     }
 
 
+def configure_logging(app, format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'):
+    if app.debug:
+        return
+
+    import logging
+    from logging.handlers import RotatingFileHandler
+    import os
+
+    app.logger.setLevel(logging.INFO)
+    info_log = os.path.join('./logs', 'info.log')
+    info_file_handler = RotatingFileHandler(info_log, maxBytes=100000, backupCount=10)
+    info_file_handler.setLevel(logging.DEBUG)
+    info_file_handler.setFormatter(logging.Formatter(format))
+    app.logger.addHandler(info_file_handler)
+
+
 configure_error_handlers(app=app, code='99', msg_fn=message_format)
+configure_logging(app)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
-
 
 ### 파일명은 app.py 로 변경하여 사용 ###

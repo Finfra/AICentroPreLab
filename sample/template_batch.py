@@ -2,7 +2,7 @@
 SACP AI 포탈과 연계를 위한 기본 객체 생성
 """
 from aicentro.session import Session
-session = Session(verify=False)
+sacp_session = Session(verify=False)
 
 # 배치 전용 설정 정보 로드
 from aicentro.config import BatchConfig
