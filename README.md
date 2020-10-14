@@ -5,8 +5,8 @@ git clone https://github.com/Finfra/AICentroPreLab
 ```
 ## [1.AICentro](./1.AICentro/)
 ## [2.PythonLibrary](./2.PythonLibrary/)
-## [3.ModelEvaluation](./3.ModelEvaluation/)
-## [4.MachineLearning](./4.MachineLearning/)
+## [3.MachineLearning](./3.MachineLearning/)
+## [4.ModelEvaluation](./4.ModelEvaluation/)
 ## [5.DataPreprocessing](./5.DataPreprocessing/)
 ## [6.KerasBasic](./6.KerasBasic/)
 ## [7-1.NLP](./7-1.NLP/)
